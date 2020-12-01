@@ -17,5 +17,10 @@ RSpec.describe StarCounter do
 
       expect(counter.find_entries).to be_nil
     end
+    it "returns trios that gives 2020 too" do
+      counter = StarCounter.new([100, 450, 732, 838])
+
+      expect(counter.find_entries(3)).to eq [450, 732, 838]
+    end
   end
 end
