@@ -8,18 +8,19 @@ class PasswordChecker
   def count
     @input.select do |line|
       values = line.match(/^(\d+)-(\d+) ([a-z]): (.+)$/)
-      puts line unless values
       next unless values
-      is_valid = valid values[1].to_i, values[2].to_i, values[3], values[4]
-      # puts line unless is_valid
-
-      is_valid
+      valid values[1].to_i, values[2].to_i, values[3], values[4]
     end.count
   end
 
-  def valid(min, max, letter, password)
+  def sled_rental_valid(min, max, letter, password)
     count = password.count(letter)
     min <= count && count <= max
+  end
+
+  def valid(min, max, letter, password)
+    string = "#{password[min-1]}#{password[max-1]}"
+    string.count(letter) == 1
   end
 end
 
