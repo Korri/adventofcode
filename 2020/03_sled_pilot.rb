@@ -2,6 +2,7 @@
 
 class ForestMap
   Position = Struct.new(:x, :y)
+
   def initialize(input)
     @input = input.map(&:chomp)
     @width = @input.first.length
@@ -35,8 +36,17 @@ class SledPilot
   end
 
   def part_one
-    @map.slide(3, 1).count{|char| char == '#'}
+    count_trees(3, 1)
   end
+
+  def part_two
+    count_trees(1, 1) * count_trees(3, 1) * count_trees(5, 1) * count_trees(7, 1) * count_trees(1, 2)
+  end
+
+  def count_trees(right, down)
+    @map.slide(right, down).count { |char| char == '#' }
+  end
+
 end
 
 if __FILE__ == $0
@@ -44,4 +54,5 @@ if __FILE__ == $0
   input = File.readlines(filename)
   pilot = SledPilot.new(input)
   puts pilot.part_one
+  puts pilot.part_two
 end
