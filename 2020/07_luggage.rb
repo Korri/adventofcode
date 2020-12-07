@@ -8,7 +8,7 @@ class Bag
       @can_contain = []
     else
       @can_contain = contains[0..-2].split(', ').map do |contain|
-        contain.sub(/ bags?/, '').split(' ', 2)
+        contain.sub(/ bags?/, '').split(' ', 2).reverse
       end
     end
   end
@@ -18,7 +18,11 @@ class Bag
   end
 
   def allowed_types
-    @can_contain.map(&:last)
+    @can_contain.map(&:first)
+  end
+
+  def allowed_map
+    Hash[@can_contain]
   end
 
   def can_contain?(sub_type)
@@ -36,7 +40,21 @@ class Luggage
   end
 
   def part_two
+    count_bags('shiny gold') - 1
+  end
 
+  def find(type)
+    @bags.find{|bag| bag.type == type}
+  end
+
+  def count_bags(type)
+    bag = find(type)
+
+    return 1 if bag.allowed_map.empty?
+
+    1 + bag.allowed_map.map do |allowed_type, count|
+      count.to_i * count_bags(allowed_type)
+    end.sum
   end
 
   def bags_that_can_contain(type)
@@ -51,5 +69,5 @@ if __FILE__ == $0
   filename = "07_input.txt"
   input = File.read(filename)
   luggages = Luggage.new(input.split("\n"))
-  puts luggages.part_one
+  puts luggages.part_two
 end
