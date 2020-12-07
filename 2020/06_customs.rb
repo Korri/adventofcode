@@ -5,8 +5,12 @@ class CustomsForm
     @data = data.split("\n")
   end
 
-  def count
+  def count_anyone
     @data.join('').split('').uniq.count
+  end
+
+  def count_everyone
+    @data.map { |line| line.split('') }.inject(&:&).count
   end
 end
 
@@ -20,7 +24,11 @@ class Customs
   end
 
   def part_one
-    forms.map(&:count).sum
+    forms.map(&:count_anyone).sum
+  end
+
+  def part_two
+    forms.map(&:count_everyone).sum
   end
 end
 
@@ -29,4 +37,5 @@ if __FILE__ == $0
   input = File.read(filename)
   customs = Customs.new(input.split("\n\n"))
   puts customs.part_one
+  puts customs.part_two
 end
