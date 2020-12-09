@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class HandheldConsole
-  DEBUG = false
   def initialize(instructions)
     @instructions = instructions
     @executed = []
@@ -13,11 +12,9 @@ class HandheldConsole
     raise "Infinite loop with Accumulator=#{@accumulator}! Was gonna call #{line} a second time!" if @executed[line]
     @executed[line] = true
     @next_line = line + 1
-    op, amount = @instructions[line].split(' ')
-    if DEBUG
-      puts "Executing #{line}: #{op} #{amount.to_i} (accumulator #{@accumulator})"
-      sleep 1
-    end
+    instruction = @instructions[line]
+    return @accumulator if instruction.nil?
+    op, amount = instruction.split(' ')
     send(op, amount.to_i)
     run(@next_line)
   end
@@ -36,9 +33,25 @@ class HandheldConsole
   end
 end
 
+class Debugger
+  def initialize(instructions)
+    @instructions = instructions
+  end
+
+  def debug(line = 0)
+    begin
+      code = @instructions.dup
+      code[line] = code[line].sub('nop', 'jmp').sub('jmp', 'nop')
+      return HandheldConsole.new(code).run
+    rescue RuntimeError
+      debug(line + 1)
+    end
+  end
+end
+
 if __FILE__ == $0
   filename = "08_input.txt"
   input = File.read(filename)
-  console = HandheldConsole.new(input.split("\n"))
-  puts console.run
+  console = Debugger.new(input.split("\n"))
+  puts console.debug
 end
