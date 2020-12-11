@@ -15,17 +15,18 @@ class Map
 
   def tick
     @data.each_with_index.map do |tile, index|
+      # puts "#{index}, #{visible(index).inspect}" if index == 9
       if tile == 'L'
-        next '#' unless adjacent(index).include?('#')
+        next '#' unless visible(index).include?('#')
       elsif tile == '#'
-        next 'L' if adjacent(index).count('#') >= 4
+        next 'L' if visible(index).count('#') >= 5
       end
 
       tile
     end
   end
 
-  def loop
+  def tick_loop
     puts self
     puts
 
@@ -37,20 +38,35 @@ class Map
     end
 
     @data = new_map
-    loop
+    tick_loop
   end
 
   def adjacent_indexes(index)
-    x = index % @width
-    y = index / @width
+    x, y = index_to_pos(index)
     x_range = [0, x-1].max..[@width - 1, x+1].min
     y_range = [0, y-1].max..y+1
 
-    x_range.map{|xval| y_range.map{|yval| yval * @width + xval }}.flatten.compact - [index]
+    x_range.map{|xval| y_range.map{|yval| pos_to_index(xval, yval) }}.flatten.compact - [index]
   end
 
   def adjacent(index)
     adjacent_indexes(index).map{|index| @data[index]}
+  end
+
+  def visible(index)
+    position = index_to_pos(index)
+    directions = [*-1..1, *-1..1].to_a.combination(2).to_a.uniq - [[0,0]]
+    directions.map { |direction| next_in_direction(position, direction) }.compact
+  end
+
+  def next_in_direction(position, direction)
+    loop do
+      position = position.zip(direction).map(&:sum)
+      index = pos_to_index(*position)
+      return nil if index.nil?
+      tile = @data[index]
+      return tile unless tile == '.'
+    end
   end
 
   def to_s
@@ -60,6 +76,23 @@ class Map
   def tiles
     @data
   end
+
+  private
+
+  def pos_to_index(xval, yval)
+    return nil if xval < 0
+    return nil if yval < 0
+    return nil if xval >= @width
+    return nil if yval >= @data.count / @width
+
+    yval * @width + xval
+  end
+
+  def index_to_pos(index)
+    x = index % @width
+    y = index / @width
+    [x, y]
+  end
 end
 
 if __FILE__ == $0
@@ -67,6 +100,6 @@ if __FILE__ == $0
   input = File.read(filename)
 
   map = Map.new(input.split("\n"))
-  map.loop
+  map.tick_loop
   puts map.tiles.count('#')
 end
