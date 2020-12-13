@@ -11,27 +11,24 @@ class Ferry
   def initialize()
     @pos = [0,0]
     @angle = 0
-  end
-
-  def direction
-    [Math.cos(@angle * Math::PI / 180).to_i, Math.sin(@angle * Math::PI / 180).to_i]
+    @waypoint = Waypoint.new
   end
 
   def move(instruction)
     operation, distance = instruction.split(//, 2)
     distance = distance.to_i
     if CARDINALS.keys.include?(operation)
-      move_in_direction(CARDINALS[operation], distance)
+      @waypoint.move(CARDINALS[operation], distance)
     elsif operation == 'F'
-      move_in_direction(direction, distance)
+      move_to_waypoint(distance)
     elsif operation == 'R'
-      @angle += distance
+      @waypoint.rotate(distance)
     elsif operation == 'L'
-      @angle -= distance
+      @waypoint.rotate(-distance)
     else
       raise "Unknown operation #{operation}"
     end
-    p [operation, distance, @pos, @angle]
+    p [operation, distance, @pos, @angle, @waypoint.to_s]
   end
 
   def part_one(instruction)
@@ -39,15 +36,43 @@ class Ferry
   end
 
   def to_s
-    "<Ferry #{@pos.inspect} => #{@pos.sum}>"
+    "<Ferry #{@pos.inspect} => #{@pos.map(&:abs).sum}>"
   end
 
   private
 
-  def move_in_direction(direction, count)
-    @pos = [@pos[0] + direction[0] * count, @pos[1] + direction[1] * count]
+  def move_to_waypoint(count)
+    @pos = [@pos[0] + @waypoint.pos[0] * count, @pos[1] + @waypoint.pos[1] * count]
   end
 end
+
+class Waypoint
+  attr_reader :pos
+
+  def initialize
+    @pos = [10, -1]
+  end
+
+  def rotate(angle)
+    while angle > 0
+      @pos = [-@pos[1], @pos[0]]
+      angle -= 90
+    end
+    while angle < 0
+      @pos = [@pos[1], -@pos[0]]
+      angle += 90
+    end
+  end
+
+  def move(direction, count)
+    @pos = [@pos[0] + direction[0] * count, @pos[1] + direction[1] * count]
+  end
+
+  def to_s
+    "<Waypoint #{@pos.inspect}>"
+  end
+end
+
 if __FILE__ == $0
   filename = "12_input.txt"
   input = File.read(filename)
