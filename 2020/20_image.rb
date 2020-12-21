@@ -1,10 +1,19 @@
-class Tile
-  attr_reader :id
+class Shape
+  def initialize(data)
+    @data = data
+  end
 
-  def initialize(string)
-    id_string, data_string = string.split("\n", 2)
-    @data = data_string.split("\n").map { |line| line.split(//) }
-    @id = id_string[5..-1].to_i
+  def initialize_copy(other)
+    super
+    @data = @data.dup
+  end
+
+  def tile(x, y)
+    @data[y][x]
+  end
+
+  def self.from_string(string)
+    Shape.new(string.split("\n").map { |line| line.split(//) })
   end
 
   def rotate
@@ -13,6 +22,73 @@ class Tile
 
   def flip
     @data = @data.map(&:reverse)
+  end
+
+  def to_s
+    @data.map { |line| line.join('') }.join("\n")
+  end
+
+  def width
+    @data[0].count
+  end
+
+  def height
+    @data.count
+  end
+
+  def each_variation
+    yield self
+    (0..3).each do
+      self.rotate
+      yield self
+    end
+    self.flip
+    (0..4).each do
+      yield self
+      self.rotate
+    end
+  end
+
+  def find_and_remove(shape)
+    count = 0
+    (0..width - shape.width).each do |x|
+      (0..height - shape.height).each do |y|
+        if shape_matches?(shape, x, y)
+          delete_shape(shape, x, y)
+          count += 1
+        end
+      end
+    end
+    count
+  end
+
+  def shape_matches?(shape, posx, posy)
+    (0...shape.width).each do |x|
+      (0...shape.height).each do |y|
+        next unless shape.tile(x, y) == '#'
+        return false unless @data[y + posy][x + posx] == '#'
+      end
+    end
+  end
+
+  def delete_shape(shape, posx, posy)
+    (0...shape.width).each do |x|
+      (0...shape.height).each do |y|
+        @data[y + posy][x + posx] = 'O' if shape.tile(x, y) == '#'
+      end
+    end
+  end
+end
+
+class Tile < Shape
+  attr_reader :id
+  attr_accessor :data
+
+  def initialize(string = nil)
+    id_string, data_string = string.split("\n", 2)
+    data = data_string.split("\n").map { |line| line.split(//) }
+    super(data)
+    @id = id_string[5..-1].to_i
   end
 
   def borders
@@ -31,27 +107,14 @@ class Tile
 
     return true if borders[border_index] == border
     return false unless can_rotate
-    iterate_variations do
+    each_variation do
       return true if borders[border_index] == border
     end
     false
   end
 
-  def iterate_variations
-    yield self
-    (0..3).each do
-      self.rotate
-      yield self
-    end
-    self.flip
-    (0..4).each do
-      yield self
-      self.rotate
-    end
-  end
-
-  def to_s
-    "Tile #{@id}\n#{@data.map { |line| line.join('') }.join("\n")}"
+  def without_borders
+    @data[1..-2].map { |line| line[1..-2] }
   end
 end
 
@@ -98,7 +161,7 @@ class Image
     borders_count = all_borders.inject(Hash.new(0)) { |total, e| total[e] += 1; total }
     @tiles.find do |tile|
       next false unless tile.borders.count { |border| borders_count[border] > 1 } == 2
-      tile.iterate_variations do
+      tile.each_variation do
         break if borders_count[tile.borders[0]] == 1 && borders_count[tile.borders[3]] == 1
       end
       true
@@ -115,7 +178,51 @@ class Image
   end
 
   def to_s
-    @map.map { |row| row.map(&:id).join('    ') }.join("\n")
+    # flatten.inspect
+    flatten.map(&:join).join("\n")
+  end
+
+  def flatten
+    @map
+      .map do |row|
+      row.map(&:without_borders)
+         .transpose
+         .map { |row| row.flatten(1) }
+    end.flatten(1)
+  end
+
+  def find_monsters
+    shape = Shape.new(flatten)
+    finder = MonsterFinder.new(shape)
+    finder.find
+  end
+end
+
+class MonsterFinder
+  MONSTER = <<MONSTER
+                  # 
+#    ##    ##    ###
+ #  #  #  #  #  #
+MONSTER
+
+  def initialize(shape)
+    @shape = shape
+    @monster = Shape.from_string(MONSTER)
+    puts "Monster:"
+    puts @monster
+  end
+
+  def find
+    puts "Finding in:\n#{@shape}"
+    @shape.each_variation do
+      shape = @shape.dup
+      count = shape.find_and_remove(@monster)
+      if count > 0
+        puts "Found monsters:"
+        puts shape
+        puts shape.to_s.count('#')
+      end
+    end
   end
 end
 
@@ -126,5 +233,5 @@ if __FILE__ == $0
   image = Image.new(tiles)
   image.find_layout
   puts image
-  p image.corners.map(&:id).reduce(1, &:*)
+  image.find_monsters
 end
