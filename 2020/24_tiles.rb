@@ -3,10 +3,15 @@ class TileMap
     tiles = {}
     instructions.each do |instructions|
       pos = walk(instructions)
-      tiles[pos] = tiles[pos] ? false : true
+      if tiles[pos].nil?
+        tiles[pos] = true
+      else
+        tiles.delete(pos)
+      end
+      tiles
     end
 
-    p tiles.values.select{|tile| tile}.count
+    tiles
   end
 
   def walk(directions)
@@ -34,14 +39,38 @@ class TileMap
 
     [x, y]
   end
+
+  def art(old_black)
+    100.times do
+      touches_black = {}
+      old_black.each do |tile|
+        x, y = tile
+        [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1], [x - 1, y -1], [x + 1, y + 1]].each do |next_to|
+          touches_black[next_to] ||= 0
+          touches_black[next_to] += 1
+        end
+      end
+      new_black = []
+      touches_black.each do |tile, count|
+        new_black << tile if count == 2 && !old_black.include?(tile)
+      end
+      old_black.each do |tile|
+        new_black << tile unless touches_black[tile].nil? || touches_black[tile] > 2
+      end
+
+      puts new_black.count
+      old_black = new_black
+    end
+  end
 end
 
 if __FILE__ == $0
   input = File.read('24_input.txt')
   map = TileMap.new
-  map.turn_tiles(input.split("\n"))
+  tiles = map.turn_tiles(input.split("\n"))
+  p tiles.values.count
+  map.art(tiles.keys)
 end
-
 
 # 1 2 3 4
 #  5 6 7
