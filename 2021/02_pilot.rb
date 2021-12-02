@@ -10,6 +10,7 @@ class Pilot
   def initialize
     @x = 0
     @depth = 0
+    @aim = 0
   end
 
   def navigate(moves)
@@ -21,10 +22,11 @@ class Pilot
   def move(instruction)
     direction, amount = instruction.split(' ')
     amount = amount.to_i
-    x_change, depth_change = DIRECTIONS[direction]
+    forward_change, depth_change = DIRECTIONS[direction]
 
-    @x += x_change * amount
-    @depth += depth_change * amount
+    @x += forward_change * amount
+    @depth += forward_change * @aim * amount
+    @aim += depth_change * amount
   end
 
   def print
