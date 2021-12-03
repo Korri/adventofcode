@@ -17,10 +17,6 @@ class Diagnostic
     end
   end
 
-  def flipped_ints
-    @flipped_ints ||= @input.map{|i| i.reverse.to_i(2)}
-  end
-
   def gamma
     bits.join("").to_i(2)
   end
