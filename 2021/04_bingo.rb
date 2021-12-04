@@ -30,6 +30,20 @@ class Bingo
       return winner.score(drawn_numbers) unless winner.nil?
     end
   end
+
+  def looser_score
+    (0..@numbers.length).each do |index|
+      drawn_numbers = @numbers[0..index]
+      loosers = @boards.reject{|board| board.wins?(drawn_numbers)}
+      if loosers.length == 1
+        looser = loosers.first
+        (index..@numbers.length).each do |i|
+          drawn_numbers = @numbers[0..i]
+          return looser.score(drawn_numbers) if looser.wins?(drawn_numbers)
+        end
+      end
+    end
+  end
 end
 
 if __FILE__ == $0
@@ -38,4 +52,5 @@ if __FILE__ == $0
 
   bingo = Bingo.new(input)
   puts bingo.winner_score
+  puts bingo.looser_score
 end
