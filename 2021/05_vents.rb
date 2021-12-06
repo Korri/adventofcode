@@ -23,17 +23,22 @@ class Line
   end
 
   def points
+
     if @start.x == @end.x
       range(@start.y, @end.y).map { |y| Point.new(@start.x, y)}
-    else
+    elsif @start.y == @end.y
       range(@start.x,@end.x).map { |x| Point.new(x, @start.y)}
+    else
+      range(@start.x,@end.x).zip(range(@start.y, @end.y)).map{|x, y| Point.new(x, y)}
     end
   end
 
   private
 
   def range(a, b)
-    ([a,b].min..[a,b].max)
+    range = ([a,b].min..[a,b].max)
+    return range.reverse_each if a > b
+    range
   end
 end
 
@@ -45,9 +50,14 @@ class Map
     end
   end
 
-  def overlap_count
+  def overlap_count_straight
     map = {}
     @lines.filter(&:straight?).map(&:points).flatten.map(&:to_s).tally.count{|p, count| count > 1}
+  end
+
+  def overlap_count
+    map = {}
+    @lines.map(&:points).flatten.map(&:to_s).tally.count{|p, count| count > 1}
   end
 end
 
@@ -56,5 +66,6 @@ if __FILE__ == $0
   input = File.readlines(filename).map(&:strip)
 
   map = Map.new(input)
-  puts map.overlap_count.inspect
+  puts map.overlap_count_straight
+  puts map.overlap_count
 end
