@@ -5,7 +5,8 @@ class Crab
   end
 
   def fuel_to(position)
-    (@position - position).abs
+    distance = (@position - position).abs
+    (distance / 2.0) * (distance + 1)
   end
 end
 
