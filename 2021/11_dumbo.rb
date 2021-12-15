@@ -77,6 +77,15 @@ class Map
 
     flashes = @octopuses.count{ |octopus| octopus.reset }
     @flashes += flashes
+    flashes
+  end
+
+  def first_sync
+    step = 1
+    while tick < @octopuses.count
+        step += 1
+    end
+    step
   end
 
   def to_s
@@ -95,4 +104,6 @@ if __FILE__ == $0
   end
 
   puts map.flashes
+  map = Map.new(input)
+  puts map.first_sync
 end
