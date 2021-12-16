@@ -28,7 +28,9 @@ class Path
     end
 
     def blocklist
-        @steps.select{|room| room.upcase != room}
+        small_rooms = @steps.select{|room| room.upcase != room}
+        return small_rooms if small_rooms.tally.any?{|_, count| count > 1}
+        return ['start']
     end
 
     def add_step(step)
