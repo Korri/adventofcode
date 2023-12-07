@@ -18,16 +18,6 @@ class Card
   end
 end
 
-class Combination
-  def initialize(schema)
-    @schema = schema
-  end
-
-  def applies(hand)
-
-  end
-end
-
 class Hand
   attr_accessor :rank
   attr_reader :cards, :bid
